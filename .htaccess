@@ -1,0 +1,10 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Убедись, что mod_rewrite работает
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+
+    # Перенаправление всех запросов в public/index.php
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
