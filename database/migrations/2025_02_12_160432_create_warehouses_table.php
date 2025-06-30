@@ -80,6 +80,7 @@ return new class extends Migration
             $table->unsignedBigInteger('warehouse_id');
             $table->integer('qty')->default(1);
             $table->tinyInteger('collected')->default(false);
+            $table->integer('collectedQty')->default(1);
 
             $table->timestamps();
 
@@ -90,7 +91,7 @@ return new class extends Migration
 
         Schema::create('warehouse_stocks', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('user_id')->index();
+            $table->unsignedBigInteger('user_id')->index()->nullable();
             $table->unsignedBigInteger('product_id');
             $table->unsignedBigInteger('warehouse_id');
             $table->unsignedBigInteger('order_product_id')->nullable();
@@ -103,6 +104,7 @@ return new class extends Migration
 
             $table->timestamps();
 
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->foreign('product_id')->references('id')->on('products')->onDelete('cascade');
             $table->foreign('warehouse_id')->references('id')->on('warehouses')->onDelete('cascade');
             $table->foreign('order_product_id')->references('id')->on('order_products')->onDelete('cascade');

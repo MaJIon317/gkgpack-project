@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/cleared', function() {
@@ -40,3 +41,9 @@ Route::middleware('guest')->group(function () {
     Route::get('/', \App\Http\Livewire\Welcome::class)->name('home');
     Route::get('/login', \App\Http\Livewire\Login::class)->name('login');
 });
+
+Route::get('/logout', function () {
+    Auth::logout();
+
+    return redirect()->route('login');
+})->name('logout');

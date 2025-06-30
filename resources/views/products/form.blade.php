@@ -80,6 +80,7 @@
                 <x-fields.text
                     name="barcode"
                     wire:model="barcode"
+                    wire:model.live="barcode"
                     label="{{ __('Barcode') }}"
                     placeholder="{{ __('Enter the barcode') }}"
                     required
@@ -103,6 +104,45 @@
                         {{ __('Generate') }}
                     </button>
                 </x-fields.text>
+
+
+                @if($duplicates->count())
+                    <div class="flex flex-col gap-2 p-3 border border-red-600 rounded mb-4">
+
+                        <h3 class="font-bold text-black mb-2 flex flex-wrap gap-2 justify-between w-full">
+                            <span class="inline-flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-copy" viewBox="0 0 16 16">
+                                    <path fill-rule="evenodd" d="M4 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zm2-1a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1zM2 5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-1h1v1a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1v1z"/>
+                                </svg>
+                                {{ __('Duplicates') }}
+                            </span>
+                        </h3>
+
+                        @foreach($duplicates as $duplicate)
+                            <div class="flex-1 flex flex-col w-full border p-3 rounded">
+
+                                <div class="w-full flex flex-col sm:flex sm:flex-row sm:items-center gap-3">
+                                    @if ($duplicate->images()->first())
+                                        <x-image src="{{ asset('storage/' . $duplicate->images()->first()->path) }}" />
+                                    @endif
+
+                                    <h2 class="sm:text-xl leading-snug font-extrabold pr-[55px] mr-auto">{{ $duplicate->name }}</h2>
+                                    <small class="flex flex-col gap-1 leading-none min-w-max">
+                                        <span class="col">
+                                            <strong>{{ __('Sku') }}:</strong>
+                                            <span>{{ $duplicate->sku }}</span>
+                                        </span>
+                                                    <span class="col">
+                                            <strong>{{ __('Barcode') }}:</strong>
+                                            <span>{{ $duplicate->barcode }}</span>
+                                        </span>
+                                    </small>
+                                </div>
+                            </div>
+                        @endforeach
+
+                    </div>
+                @endif
 
                 <x-fields.text
                     name="section"
@@ -170,12 +210,14 @@
                                 <button
                                     wire:click="$dispatch('openModal', { component: 'warehouse-reduce-form', arguments: { product: {{ $product }} }})"
                                     type="button"
-                                    class="flex items-center p-3 text-start font-bold text-gray-900 rounded-lg bg-gray-50 hover:bg-gray-100 group hover:shadow dark:bg-gray-600 dark:hover:bg-gray-500 dark:text-white w-full">
+                                    class="flex items-center p-3 text-start font-bold text-gray-900 rounded-lg bg-gray-50 hover:bg-gray-100 group hover:shadow w-full">
                                     {{ __('Stock-Out') }}
                                 </button>
                             </li>
                         </ul>
                     @endif
+
+                    @livewire('components.history', ['object' => $product])
 
                 </div>
 

@@ -4,7 +4,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
-        
+
         <link rel="manifest" href="{{ asset('manifest.webmanifest') }}">
 
         <!-- Обязательные -->
@@ -19,6 +19,12 @@
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
 
+        <script>
+            window.Laravel = {
+                user: @json(Auth::user())
+            };
+        </script>
+
         <!-- Styles -->
         @livewireStyles
     </head>
@@ -28,7 +34,7 @@
         </div>
 
         @livewire('wire-elements-modal')
-        
+
         @livewireScripts
     </body>
 </html>

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class UserActivity extends Model
 {
@@ -10,14 +11,21 @@ class UserActivity extends Model
 
     protected $fillable = [
         'user_id',
-        'subject',
-        'object',
+        'subject_type',
+        'subject_event',
+        'subject_id',
+        'properties',
     ];
 
     protected function casts(): array
     {
         return [
-            'object' => 'array',
+            'properties' => 'array',
         ];
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 }

@@ -56,6 +56,17 @@
                             </button>
                         </li>
                     @endif
+
+                    <hr>
+                    <li>
+                        <button
+                            wire:click="deleteProduct({{ $product }})"
+                            wire:confirm="{{ __('Do you really want to delete the product?') }}"
+                            type="button"
+                            class="text-red-500 hover:text-red-800 text-left text-sm">
+                            {{ __('Delete') }}
+                        </button>
+                    </li>
                 </ul>
             </div>
         @endforeach

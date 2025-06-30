@@ -1,1 +1,0 @@
-<?php /**PATH /var/www/gkgpack.su/public_html/vendor/ramonrietdijk/livewire-tables/resources/views/filters/filter.blade.php ENDPATH**/ ?>

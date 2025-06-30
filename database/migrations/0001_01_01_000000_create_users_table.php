@@ -42,12 +42,13 @@ return new class extends Migration
         Schema::create('user_activities', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('user_id');
-            $table->string('subject');
-            $table->text('object');
+            $table->string('subject_type')->index();
+            $table->string('subject_event')->index();
+            $table->string('subject_id')->index();
+            $table->json('properties')->nullable();
+            $table->timestamp('created_at')->useCurrent();
 
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-
-            $table->timestamp('created_at')->useCurrent();
         });
     }
 

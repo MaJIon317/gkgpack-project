@@ -1,0 +1,1 @@
+<?php /**PATH /home/ubuntu/work/ruslan-laravel/resources/views/vendor/livewire-table/filters/filter.blade.php ENDPATH**/ ?>

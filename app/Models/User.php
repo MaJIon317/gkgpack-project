@@ -57,12 +57,12 @@ class User extends Authenticatable
     public function hasRole(string|array $role): bool
     {
         if (is_array($role)) {
-            return in_array($this->role->value, $role) ? true : false;
+            return in_array($this->role->value, $role);
         } else {
             return $this->role->value === $role;
         }
     }
-    
+
     public function setTimeZoneAttribute($value): void
     {
         $this->attributes['timezone'] = $value == config('app.timezone') || is_null($value) ? null : $value;

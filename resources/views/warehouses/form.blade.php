@@ -14,6 +14,8 @@
             required
         />
 
+        @livewire('components.history', ['object' => $warehouse])
+
     </x-slot>
 
     <x-slot name="actions">

@@ -16,7 +16,7 @@
 
 
         <base href="{{ route('home') }}">
-      
+
         <title>{{ $title ?? config('app.name', 'Laravel') }}</title>
 
         <!-- Scripts -->
@@ -25,6 +25,12 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
 
         @vite('resources/js/scanner.js')
+
+        <script>
+            window.Laravel = {
+                user: @json(Auth::user())
+            };
+        </script>
 
         <!-- Styles -->
         @livewireStyles
@@ -56,6 +62,5 @@
         @livewire('wire-elements-modal')
 
         @livewireScripts
-    
     </body>
 </html>

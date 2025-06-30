@@ -2,103 +2,99 @@
 
 namespace App\Listeners;
 
-use App\Events\OrderEvent;
-use App\Events\OrderProductEvent;
-use App\Events\ProductEvent;
-use App\Events\UserEvent;
-use App\Events\WarehouseEvent;
-use App\Events\WarehouseMovingEvent;
-use App\Events\WarehouseRegistrationEvent;
+use App\Events;
 use Illuminate\Auth\Events\Login;
-use Illuminate\Auth\Events\Logout;
 use Illuminate\Events\Dispatcher;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 
 class ActivityListener
 {
-    public function setActivity($subject, $event)
+    public function setActivity($event, string|null $resource = null): void
     {
-        if ($event) {
+        $changes = $event->getDirty() ?? [];
+
+        if ($resource === 'deleted' && !$changes) {
+            $changes = $event->getAttributes();
+        }
+
+        unset(
+            $changes[$event->getKeyName()],
+            $changes['created_at'],
+            $changes['updated_at'],
+            $changes['deleted_at'],
+            $changes['email_verified_at'],
+            $changes['remember_token'],
+            $changes['password'],
+            $changes['resource'],
+        );
+
+        if ($changes) {
             $user = auth()->user();
 
-            if ($user) {
-                $base = $event->getFillable() ?? [];
-
-                $object = $event->getChanges() ?: ($event->getAttributes() ?? []);
-
-                // Deleting the service fields
-                foreach(['created_at', 'updated_at', 'deleted_at', 'email_verified_at', 'remember_token', 'password'] as $value) {
-                    if (!array_key_exists($value, $base) && array_key_exists($value, $object)) {
-                        unset($object[$value]);
-                    }
-                }
-
-                $user->activities()->create([
-                    'subject' => $subject,
-                    'object' => $object,
-                ]);
-            }
+            $user?->activities()->create([
+                'user_id' => $user->id,
+                'subject_type' => $event->getMorphClass(),
+                'subject_event' => $resource,
+                'subject_id' => $event->{$event->getKeyName()},
+                'properties' => $changes,
+            ]);
         }
     }
 
-    public function handleUserLogin(Login $event): void
+    public function handleLogin(Login $event): void
     {
-        $this->setActivity('login', $event->user);
+        $event->user->ip = '-';
+
+        $this->setActivity($event->user, 'login');
     }
 
-    public function handleUserLogout(Logout $event): void
+    public function handleUserEvent(Events\UserEvent $event): void
     {
-        $this->setActivity('logout', $event->user);
+        $this->setActivity($event->user, $event->resource);
     }
 
-    public function handleUserEvent(UserEvent $event): void
+    public function handleProductEvent(Events\ProductEvent $event): void
     {
-        $this->setActivity("user-{$event->resource}", $event->user);
+        $this->setActivity($event->product, $event->resource);
     }
 
-    public function handleProductEvent(ProductEvent $event): void
+    public function handleWarehouseEvent(Events\WarehouseEvent $event): void
     {
-        $this->setActivity("product-{$event->resource}", $event->product);
+        $this->setActivity($event->warehouse, $event->resource);
     }
 
-    public function handleWarehouseEvent(WarehouseEvent $event): void
+    public function handleWarehouseRegistrationEvent(Events\WarehouseRegistrationEvent $event): void
     {
-        $this->setActivity("warehouse-{$event->resource}", $event->warehouse);
+        $this->setActivity($event->warehouseRegistration, $event->resource);
     }
 
-    public function handleWarehouseRegistrationEvent(WarehouseRegistrationEvent $event): void
+    public function handleWarehouseMovingEvent(Events\WarehouseMovingEvent $event): void
     {
-        $this->setActivity("warehouseRegistration-{$event->resource}", $event->warehouseRegistration);
+        $this->setActivity($event->warehouseMoving, $event->resource);
     }
 
-    public function handleWarehouseMovingEvent(WarehouseMovingEvent $event): void
+    public function handleOrderEvent(Events\OrderEvent $event): void
     {
-        $this->setActivity("warehouseMoving-{$event->resource}", $event->warehouseMoving);
+        $this->setActivity($event->order, $event->resource);
     }
 
-    public function handleOrderEvent(OrderEvent $event): void
+    public function handleOrderProductEvent(Events\OrderProductEvent $event): void
     {
-        $this->setActivity("order-{$event->resource}", $event->order);
-    }
-
-    public function handleOrderProductEvent(OrderProductEvent $event): void
-    {
-        $this->setActivity("orderProduct-{$event->resource}", $event->orderProduct);
+        $this->setActivity($event->orderProduct, $event->resource);
     }
 
     public function subscribe(Dispatcher $events): array
     {
         return [
-            Login::class => 'handleUserLogin',
-            Logout::class => 'handleUserLogout',
-            UserEvent::class => 'handleUserEvent',
-            ProductEvent::class => 'handleProductEvent',
-            WarehouseEvent::class => 'handleWarehouseEvent',
-            WarehouseRegistrationEvent::class => 'handleWarehouseRegistrationEvent',
-            WarehouseMovingEvent::class => 'handleWarehouseMovingEvent',
-            OrderEvent::class => 'handleOrderEvent',
-            OrderProductEvent::class => 'handleOrderProductEvent',
+            Login::class => 'handleLogin',
+            Events\UserEvent::class => 'handleUserEvent',
+            Events\ProductEvent::class => 'handleProductEvent',
+            Events\WarehouseEvent::class => 'handleWarehouseEvent',
+            Events\WarehouseRegistrationEvent::class => 'handleWarehouseRegistrationEvent',
+            Events\WarehouseMovingEvent::class => 'handleWarehouseMovingEvent',
+            Events\OrderEvent::class => 'handleOrderEvent',
+            Events\OrderProductEvent::class => 'handleOrderProductEvent',
         ];
     }
 }

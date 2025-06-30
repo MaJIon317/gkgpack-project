@@ -31,6 +31,8 @@ class OrderForm extends ModalComponent
 
     public Collection $products;
 
+    public bool $completed = false;
+
     public ?Collection $selectedProducts = null;
 
     public $data = [];
@@ -58,6 +60,8 @@ class OrderForm extends ModalComponent
                 $this->addProduct($product->product, $product->warehouse_id, $product->qty, $product->collected, $product->id);
             }
         }
+
+        $this->completed = $this->order?->status === 'completed';
     }
 
     public function store()

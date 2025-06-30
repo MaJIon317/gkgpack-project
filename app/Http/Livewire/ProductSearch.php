@@ -2,7 +2,10 @@
 
 namespace App\Http\Livewire;
 
+use App\Http\Requests\ProductDeleteRequest;
 use App\Models\Product;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\View\View;
 use LivewireUI\Modal\ModalComponent;
 
 class ProductSearch extends ModalComponent
@@ -28,7 +31,20 @@ class ProductSearch extends ModalComponent
         return 'md';
     }
 
-    public function render()
+    public function deleteProduct(Product $product): void
+    {
+        if (!$product->orders()->exists()) {
+            $product->delete();
+
+            $this->dispatch('toast', message: __('The product was successfully deleted'));
+
+            $this->closeModal();
+        } else {
+            $this->dispatch('toast', message: __('You can\'t delete the product, it has already been used in orders.'), type: 'error');
+        }
+    }
+
+    public function render(): View
     {
         return view('products.search');
     }

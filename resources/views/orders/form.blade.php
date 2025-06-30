@@ -1,6 +1,6 @@
 <div>
     <div class="bg-white border-b-2 border-indigo-500 px-7 py-4">
-        <h3 class="font-medium text-black">{{ $order ? __('Edit order, :name', ['name' => $order->name]) : __('Create order') }}</h3>
+        <h3 class="font-medium text-black">{!! $order ? __('Edit order, :name - <strong>:status</strong>', ['name' => $order->name, 'status' => $order->status]) : __('Create order') !!}</h3>
     </div>
 
     <x-form submit="{{ $order ? 'update' : 'store' }}" class="w-full">
@@ -28,51 +28,54 @@
                 placeholder="{{ __('Enter the note') }}"
             />
 
-            <x-fields.text
-                name="search"
-                wire:model="search"
-                wire:keyup.debounce.300ms="searchProducts"
-                placeholder="{{ __('Enter to add the product') }}"
-            >
-                <x-slot:buttons>
-                    <livewire:scanner :scanner="$scanner = rand(0, 1000000)">
-                        @script
-                            <script>
-                                Livewire.on('barcodeResult{{ $scanner }}', ($this) => {
-                                    let test = $wire.searchBarcode($this.result);
-                                })
-                            </script>
-                        @endscript
-                    </livewire:scanner>
-                </x-slot:buttons>
+            @if(!$completed)
+                <x-fields.text
+                    name="search"
+                    wire:model="search"
+                    wire:keyup.debounce.300ms="searchProducts"
+                    placeholder="{{ __('Enter to add the product') }}"
+                >
 
-                @if ($searchResults->count())
-                    <div class="relative w-full">
-                        <div class="absolute z-10 w-full bg-white divide-y divide-gray-100 rounded-lg shadow-sm dark:bg-gray-700 overflow-x-auto max-h-[300px]">
-                            <ul class="py-2 text-sm text-gray-700 dark:text-gray-200" aria-labelledby="dropdownDefaultButton">
-                                @foreach ($searchResults as $product)
-                                    <li>
-                                        <button type="button" wire:click="addProduct({{ $product }})" class="block w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
-                                            {{ $product->name }}
-                                            <small>
-                                                <span>
-                                                    <strong>{{ __('Sku') }}:</strong>
-                                                    <span>{{ $product->sku }}</span>
-                                                </span>
-                                                <span>
-                                                    <strong>{{ __('Barcode') }}:</strong>
-                                                    <span>{{ $product->barcode }}</span>
-                                                </span>
-                                            </small>
-                                        </a>
-                                    </li>
-                                @endforeach
-                            </ul>
+                    <x-slot:buttons>
+                        <livewire:scanner :scanner="$scanner = rand(0, 1000000)">
+                            @script
+                                <script>
+                                    Livewire.on('barcodeResult{{ $scanner }}', ($this) => {
+                                        let test = $wire.searchBarcode($this.result);
+                                    })
+                                </script>
+                            @endscript
+                        </livewire:scanner>
+                    </x-slot:buttons>
+
+                    @if ($searchResults->count())
+                        <div class="relative w-full">
+                            <div class="absolute z-10 w-full bg-white divide-y divide-gray-100 rounded-lg shadow-sm dark:bg-gray-700 overflow-x-auto max-h-[300px]">
+                                <ul class="py-2 text-sm text-gray-700 dark:text-gray-200" aria-labelledby="dropdownDefaultButton">
+                                    @foreach ($searchResults as $product)
+                                        <li>
+                                            <button type="button" wire:click="addProduct({{ $product }})" class="block w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
+                                                {{ $product->name }}
+                                                <small>
+                                                    <span>
+                                                        <strong>{{ __('Sku') }}:</strong>
+                                                        <span>{{ $product->sku }}</span>
+                                                    </span>
+                                                    <span>
+                                                        <strong>{{ __('Barcode') }}:</strong>
+                                                        <span>{{ $product->barcode }}</span>
+                                                    </span>
+                                                </small>
+                                            </a>
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            </div>
                         </div>
-                    </div>
-                @endif
+                    @endif
 
-            </x-fields.text>
+                </x-fields.text>
+            @endif
 
             @if ($products->count())
                 <x-table-default>
@@ -168,13 +171,18 @@
                 @endforeach
             </x-fields.select >
 
+            @livewire('components.history', ['object' => $order])
+
         </x-slot>
 
         <x-slot name="actions">
             @if ($order)
                 <x-button type="button" color="dark" message="{{ __('DONE') }}" wire:click="$dispatch('closeModal')" />
             @endif
-            <x-button type="submit" message="{{ __('Commit') }}" />
+
+            @if(!$completed)
+                <x-button type="submit" message="{{ __('Commit') }}" />
+            @endif
         </x-slot>
 
     </x-form>

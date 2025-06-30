@@ -7,7 +7,9 @@ use App\Http\Requests\ProductUpdateRequest;
 use App\Models\Product;
 use App\Models\Warehouse;
 use App\Models\WarehouseRegistration;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\View\View;
 use Livewire\WithFileUploads;
 use LivewireUI\Modal\ModalComponent;
 
@@ -16,6 +18,8 @@ class ProductForm extends ModalComponent
     use WithFileUploads;
 
     public Product|null $product = null;
+
+    public Collection $duplicates;
 
     public $images = [];
 
@@ -41,7 +45,7 @@ class ProductForm extends ModalComponent
         return '7xl';
     }
 
-    public function mount()
+    public function mount(): void
     {
         if (isset($this->product->images)) {
             foreach($this->product->images as $image) {
@@ -55,9 +59,11 @@ class ProductForm extends ModalComponent
         $this->section = $this->product->section ?? $this->section;
 
         $this->warehouses = Warehouse::all();
+
+        $this->searchDuplicates();
     }
 
-    public function store()
+    public function store(): void
     {
         $rules = new ProductStoreRequest;
 
@@ -74,7 +80,7 @@ class ProductForm extends ModalComponent
         $this->dispatch('toast', message: __('Completed successfully'));
     }
 
-    public function update()
+    public function update(): void
     {
         $rules = new ProductUpdateRequest;
 
@@ -91,7 +97,7 @@ class ProductForm extends ModalComponent
         $this->dispatch('toast', message: __('Saved successfully'));
     }
 
-    public function uploadImage()
+    public function uploadImage(): void
     {
         $validator = Validator::make($this->imageup, [
             '*' => 'image|max:5120',
@@ -116,12 +122,12 @@ class ProductForm extends ModalComponent
         $this->imageup = null;
     }
 
-    public function removeImage($image)
+    public function removeImage($image): void
     {
         unset($this->images[$image]);
     }
 
-    private function updateImage()
+    private function updateImage(): void
     {
         $this->product->images()->delete();
 
@@ -133,7 +139,7 @@ class ProductForm extends ModalComponent
         }
     }
 
-    private function updateStocks()
+    private function updateStocks(): void
     {
         if ($this->stocks) {
             foreach($this->stocks as $warehouse_id => $qty) {
@@ -156,12 +162,30 @@ class ProductForm extends ModalComponent
         }
     }
 
-    public function barcodeGenerator()
+    public function barcodeGenerator(): void
     {
         $this->barcode = fake()->ean13();
+
+        $this->searchDuplicates();
     }
 
-    public function render()
+    public function updatedBarcode(): void
+    {
+        $this->searchDuplicates();
+    }
+
+    public function searchDuplicates(): void
+    {
+        $this->duplicates = Product::where(function ($query) {
+            if ($this->product) {
+                $query->where('id', '!=', $this->product->id);
+            }
+
+            $query->where('barcode', $this->barcode);
+        })->get();
+    }
+
+    public function render(): View
     {
         return view('products.form');
     }

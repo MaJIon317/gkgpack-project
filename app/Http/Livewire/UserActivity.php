@@ -2,7 +2,10 @@
 
 namespace App\Http\Livewire;
 
-use App\Models\User;
+use App\Models\UserActivity as ModelsUserActivity;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\View\View;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -10,33 +13,68 @@ class UserActivity extends Component
 {
     use WithPagination;
 
-    public User|null $user = null;
+    public array $users = [];
 
-    public $subjects = null;
+    #[Url(except: null)]
+    public $subject_type,
+        $subject_event,
+        $subject_id,
+        $user_id= null;
 
-    public $subject = null;
-
-    public function mount()
+    public function mount(): void
     {
-        if (!$this->user) {
-            $this->user = auth()->user();
-        }
-
-        $this->subjects = $this->user->activities()->groupBy('subject')->select('subject')->get();
+        $this->users = ModelsUserActivity::groupBy('user_id')->get()->pluck('user.name', 'user_id')->toArray();
     }
 
-    public function render()
+    public function subjectTypes(): mixed
     {
-        $this->subjects = $this->user->activities()->groupBy('subject')->select('subject')->get();
-
-        $subject = $this->subject;
-
-        $activities = $this->user->activities()->where(function ($query) use ($subject) {
-            if ($subject) {
-                $query->where('subject', $subject);
+        return ModelsUserActivity::where(function ($query) {
+            if ($this->user_id) {
+                $query->where('user_id', $this->user_id);
             }
-        })->orderByDesc('created_at')->paginate(100);
+        })->groupBy('subject_type')->select('subject_type')->get();
+    }
 
+    public function subjectEvents(): Collection
+    {
+        return ModelsUserActivity::where(function ($query) {
+            if ($this->user_id) {
+                $query->where('user_id', $this->user_id);
+            }
+
+            if ($this->subject_type) {
+                $query->where('subject_type', $this->subject_type);
+            }
+        })->groupBy('subject_event')->select('subject_event')->get();
+    }
+
+    public function updatedSubjectType(): void
+    {
+        $this->subject_event = null;
+        $this->subject_id = null;
+    }
+
+    public function render(): View
+    {
+        $activities = ModelsUserActivity::where(function ($query) {
+                if ($this->user_id) {
+                    $query->where('user_id', $this->user_id);
+                }
+
+                if ($this->subject_type) {
+                    $query->where('subject_type', $this->subject_type);
+                }
+
+                if ($this->subject_event) {
+                    $query->where('subject_event', $this->subject_event);
+                }
+
+                if ($this->subject_id) {
+                    $query->where('subject_id', $this->subject_id);
+                }
+            })
+            ->orderByDesc('created_at')
+            ->paginate(100);
 
         return view('user-activity', compact('activities'))
             ->title(__('User Activity'));
